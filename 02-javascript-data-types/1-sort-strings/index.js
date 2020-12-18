@@ -5,11 +5,19 @@
  * @returns {string[]}
  */
 export function sortStrings(arr, param = 'asc') {
-    const newArr = [...arr];
-    const collator = new Intl.Collator('ru', {sensitivity: 'variant', caseFirst: 'upper'}, 
-                                       'en', {sensitivity: 'case', caseFirst: 'upper'});
+    switch (param) {
+        case 'asc':
+            return makeSort(arr, 1);
+        case 'desc':
+            return makeSort(arr, -1);
+        default:
+            return arr;
+    }
+}
 
-    const direction = param == 'desc'? -1 : 1;
+function makeSort(arr, direction) {
+    const collator = new Intl.Collator('ru', {caseFirst: 'upper'}, 
+                                       'en', {caseFirst: 'upper'});
 
-    return newArr.sort( (a, b) => direction * collator.compare(a, b));
+    return [...arr].sort((a, b) => direction * collator.compare(a, b));
 }
