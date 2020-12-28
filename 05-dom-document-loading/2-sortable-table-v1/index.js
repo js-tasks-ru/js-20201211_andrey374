@@ -1,5 +1,6 @@
 export default class SortableTable {
     subElements = {};
+    headerElements = {};
 
     constructor (header, {data} = {}){
         this.header = header;
@@ -14,14 +15,26 @@ export default class SortableTable {
 
         this.element = element.firstElementChild;
         
-        this.subElements = this.getSubElements(this.element);
+        this.subElements = this.getSubElements(this.element, 'element');
+        this.subElements.arrow = this.createArrow();
+
+        this.headerElements = this.getSubElements(this.subElements.header, 'id');
     }
 
-    getSubElements(element) {
-        const elements = element.querySelectorAll('[data-element]');
-        
+ //   getSubElements(element) {
+ //       const elements = element.querySelectorAll('[data-element]');
+ //       
+ //       return [...elements].reduce((accum, subElement) => {
+ //           accum[subElement.dataset.element] = subElement;
+ //           return accum;
+ //         }, {}); 
+ //   }
+
+    getSubElements(element, selector) {
+        const elements = element.querySelectorAll(`[data-${selector}]`);
+
         return [...elements].reduce((accum, subElement) => {
-            accum[subElement.dataset.element] = subElement;
+            accum[subElement.dataset[selector]] = subElement;
             return accum;
           }, {}); 
     }
@@ -48,6 +61,16 @@ export default class SortableTable {
           </div>
         </div>
         `;
+    }
+
+    createArrow() {
+        const arrow = document.createElement('div');
+        arrow.innerHTML = `
+        <span data-element="arrow" class="sortable-table__sort-arrow">
+            <span class="sort-arrow"></span>
+        </span>
+        `
+        return arrow.firstElementChild;
     }
 
     getTableHeader (header) {
@@ -102,6 +125,8 @@ export default class SortableTable {
        const sortedData = this.sortData({data, sortType, fieldValue, orderValue});
 
        this.subElements.body.innerHTML = this.getTableBody(sortedData);
+
+       this.setArrow(fieldValue, orderValue);
     }
 
     sortData({data, sortType, fieldValue, orderValue}) {
@@ -122,6 +147,20 @@ export default class SortableTable {
         }
     }
 
+    setArrow (fieldValue, orderValue) {
+        this.subElements.arrow.remove();
+
+        for (const key of Object.keys(this.headerElements)) {
+            if ('order' in this.headerElements[key].dataset) delete this.headerElements[key].dataset.order;
+            if (key === fieldValue) {
+                this.headerElements[key].dataset.order = orderValue;
+                const elementWithArrow = document.querySelector(`[data-id=${key}]`);
+                elementWithArrow.appendChild(this.subElements.arrow);
+            }
+        }        
+        
+    }
+
     remove() {
         this.element.remove();
     }
@@ -129,6 +168,7 @@ export default class SortableTable {
     destroy() {
         this.remove();
         this.subElements = null;
+        this.headerElements = null;
     }
 
 }
