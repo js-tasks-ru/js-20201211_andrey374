@@ -1,4 +1,5 @@
 export default class ColumnChart {
+    subElements = {};
     chartHeight = 50;
 
     constructor ({
@@ -16,84 +17,78 @@ export default class ColumnChart {
 
     render () {
         const element = document.createElement('div');
-        element.innerHTML = `
-            <div style="--chart-height: ${this.chartHeight}">
-            </div>
-        `        
-        const renderedElement = element.firstElementChild;
-
-        const title = document.createElement('div');
-        title.className = 'column-chart__title';
-        title.innerHTML = 'Total ' + this.label;
-        renderedElement.append(title);
         
-        if(this.link) {
-            const linkNode = document.createElement('a');
-            linkNode.className = 'column-chart__link';
-            linkNode.href = this.link;
-            linkNode.innerHTML = 'View all';
-            title.append(linkNode);
+        element.innerHTML = this.template;
+
+        this.element = element.firstElementChild;
+
+        if (this.data.length) {
+            this.element.classList.remove('column-chart_loading');
         }
 
-        const container = document.createElement('div');
-        container.className = 'column-chart__container';
-        renderedElement.append(container);
+        this.subElements = this.getSubElements(this.element);
+    }
 
-        const chartHeader = document.createElement('div');
-        chartHeader.dataset.element = 'header';
-        chartHeader.className = 'column-chart__header';
-        chartHeader.innerHTML = this.value;
-        container.append(chartHeader);
+    getSubElements (element) {
+        const elements = element.querySelectorAll('[data-element]');
 
-        const chartBody = document.createElement('div');
-        chartBody.dataset.element = 'body';
-        chartBody.className = 'column-chart__chart';
-        container.append(chartBody);
+        return [...elements].reduce((accum, subElement) => {
+            accum[subElement.dataset.element] = subElement;
+            return accum;
+          }, {}); 
+    }
+
+    get template() {
+        return `
+        <div class="column-chart column-chart_loading" style="--chart-height: ${this.chartHeight}">
+        <div class="column-chart__title">
+          Total ${this.label}
+          ${this.getLink()}
+        </div>
+        <div class="column-chart__container">
+          <div data-element="header" class="column-chart__header">${this.value}</div>
+          <div data-element="body" class="column-chart__chart">
+            ${this.getColumnBody(this.data)}
+          </div>
+        </div>
+      </div>
+        `
+    }
+
+    getLink() {
+        return this.link ? `<a href="${this.link}" class="column-chart__link">View all</a>`: '';
+    }
+
+    getColumnBody(data) {
+        const maxValue = Math.max(...this.data);
+        const scale = this.chartHeight / maxValue;
         
-        this.element = renderedElement;
-        
-        this.update(this.data);
+        return data
+            .map(item => {
+                const percent = (item / maxValue * 100).toFixed(0);
+                const value = String(Math.floor(item * scale));
+                return `<div style="--value: ${value}" data-tooltip="${percent}%"></div>`;
+            })
+            .join('');       
     }
 
     update (data) {
         this.data = data;
-
-        if (this.data.length === 0) {
-            this.element.className = "column-chart column-chart_loading";
-        } else {
-            this.element.className = "column-chart";
-        }
-
-        const maxValue = Math.max(...this.data);
-        const scale = this.chartHeight / maxValue;
-        const chartBody = this.element.querySelector('.column-chart__chart');
-        const oldRows = chartBody.querySelectorAll('div');
-
-        for (let i = 0; i < oldRows.length; i++) {
-            oldRows[i].remove();
-        }
-        
-        this.data.forEach(item => {
-                const percent = (item / maxValue * 100).toFixed(0) + '%';
-                const value = String(Math.floor(item * scale));
-                const row = document.createElement('div');
-                row.style = `--value: ${value}`;
-                row.dataset.tooltip = percent;
-                chartBody.append(row);
-        });       
+        this.subElements.body.innerHTML = this.getColumnBody(this.data);
     }
 
     initEventListeners () {
         // NOTE: в данном методе добавляем обработчики событий, если они есть
-      }
+    }
     
-      remove () {
+    remove () {
         this.element.remove();
-      }
-    
-      destroy() {
+    }
+
+    destroy() {
         this.remove();
+        this.element = null;
+        this.subElements = {};
         // NOTE: удаляем обработчики событий, если они есть
-      }
-    
+    }
 }
