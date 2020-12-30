@@ -21,15 +21,6 @@ export default class SortableTable {
         this.headerElements = this.getSubElements(this.subElements.header, 'id');
     }
 
- //   getSubElements(element) {
- //       const elements = element.querySelectorAll('[data-element]');
- //       
- //       return [...elements].reduce((accum, subElement) => {
- //           accum[subElement.dataset.element] = subElement;
- //           return accum;
- //         }, {}); 
- //   }
-
     getSubElements(element, selector) {
         const elements = element.querySelectorAll(`[data-${selector}]`);
 
@@ -157,8 +148,7 @@ export default class SortableTable {
                 const elementWithArrow = document.querySelector(`[data-id=${key}]`);
                 elementWithArrow.appendChild(this.subElements.arrow);
             }
-        }        
-        
+        }
     }
 
     remove() {

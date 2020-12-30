@@ -1,24 +1,30 @@
 export default class NotificationMessage {
     static renderTarget;
-    static timerId = 0;
     LAG_TIME = 100;
 
-    constructor (message = '', {duration = 0, type = ''} = {}) {
+    constructor (message, {duration = 2000, type = 'success'} = {}) {
+
+        if(NotificationMessage.renderTarget){
+            NotificationMessage.renderTarget.remove();
+        }
+
         this.message = message;
         this.duration = duration;
+        this.durationInSeconds = (duration / 1000) + 's';
         this.type = type;
-        this.init();
+        this.render();
     }
 
-    init() {
+    render() {
         const element = document.createElement('div');
         element.innerHTML = this.template;
         this.element = element.firstElementChild;
+        NotificationMessage.renderTarget = this.element;
     }
 
     get template() {
         return `
-        <div class="notification ${this.type}" style="--value:${this.duration/1000}s">
+        <div class="notification ${this.type}" style="--value:${this.durationInSeconds}">
             <div class="timer"></div>
             <div class="inner-wrapper">
                 <div class="notification-header">${this.type}</div>
@@ -30,31 +36,20 @@ export default class NotificationMessage {
         `
     }
     
-    show(renderTarget = this.element) {
-         this.remove();
-        
-        this.element = renderTarget;
-        
-        NotificationMessage.renderTarget = renderTarget;
-        
-        document.body.append(NotificationMessage.renderTarget);
+    show(parent = document.body) {
+         parent.append(this.element);
 
-        NotificationMessage.timerId = setTimeout(() => {
+        setTimeout(() => {
             this.remove();
         }, this.duration - this.LAG_TIME);
     }
 
     remove() {
-        if(NotificationMessage.renderTarget){
-            NotificationMessage.renderTarget.remove();
-            NotificationMessage.renderTarget = null;
-            clearTimeout(NotificationMessage.timerId);
-        }
+        this.element.remove();
     }
 
     destroy() {
         this.remove();
-        this.element.remove();
-        // NOTE: удаляем обработчики событий, если они есть
+        NotificationMessage.renderTarget = null;
     }
 }
