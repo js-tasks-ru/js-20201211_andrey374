@@ -1,5 +1,5 @@
 export default class DoubleSlider {
-    boundaries = {};
+boundaries = {};
     thumb = {};
     scale;
     leftThumbOffset;
@@ -148,5 +148,4 @@ export default class DoubleSlider {
         this.removeEventListeners();
         this.remove();
     }
-    
 }
