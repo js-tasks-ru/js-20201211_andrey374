@@ -1,16 +1,19 @@
 export default class SortableList {
     onPointerDown (event) {
-        const moveAt = (pageY) => {
-            const translation =  pageY - shiftY;
-            draggableItem.style.top = translation + 'px';
+        const moveAt = (pageX, pageY) => {
+            const translationX =  pageX - shiftX;
+            const translationY =  pageY - shiftY;
             
-            if (liAfterPlaceholder instanceof Element && translation > liAfterPlaceholder.getBoundingClientRect().top) {
+            draggableItem.style.top = translationY + 'px';
+            draggableItem.style.left = translationX + 'px';
+            
+            if (liAfterPlaceholder instanceof Element && translationY > liAfterPlaceholder.getBoundingClientRect().y) {
                 placeholder.before(liAfterPlaceholder)
                 liAfterPlaceholder = placeholder.nextSibling;
                 liBeforePlaceholder = placeholder.previousSibling;
             }
 
-            if (liBeforePlaceholder instanceof Element && translation < liBeforePlaceholder.getBoundingClientRect().top) {
+            if (liBeforePlaceholder instanceof Element && translationY < liBeforePlaceholder.getBoundingClientRect().y) {
                 placeholder.after(liBeforePlaceholder)
                 liAfterPlaceholder = placeholder.nextSibling;
                 liBeforePlaceholder = placeholder.previousSibling;
@@ -19,7 +22,7 @@ export default class SortableList {
         }
 
         const onPointerMove = (event) => {
-            moveAt(event.pageY);
+            moveAt(event.pageX, event.pageY);
         }
 
         const onPointerUp = () => {
@@ -42,13 +45,13 @@ export default class SortableList {
         if(!event.target.hasAttribute('data-grab-handle')) return;
         
         const draggableItem = event.target.closest('.sortable-list__item');
-        const shiftY = event.clientY - draggableItem.getBoundingClientRect().top;
+        const shiftY = event.pageY - draggableItem.getBoundingClientRect().y;
+        const shiftX = event.pageX - draggableItem.getBoundingClientRect().x;
 
         const placeholder = document.createElement('div');
         placeholder.classList.add('sortable-list__placeholder');
         placeholder.style.width = draggableItem.offsetWidth + 'px';
         placeholder.style.height = draggableItem.offsetHeight + 'px';
-        
         
         draggableItem.style.width = draggableItem.offsetWidth + 'px';
         draggableItem.classList.add('sortable-list__item_dragging');
@@ -58,7 +61,7 @@ export default class SortableList {
 
         let liAfterPlaceholder = placeholder.nextSibling;
         let liBeforePlaceholder = placeholder.previousSibling;
-        moveAt(event.pageY);
+        moveAt(event.pageX, event.pageY);
 
         document.addEventListener('pointermove', onPointerMove);
         document.addEventListener('pointerup', onPointerUp);
@@ -71,18 +74,18 @@ export default class SortableList {
     }
 
     render () {
-        const element = document.createElement('div');
+        this.element = document.createElement('ul');
+        this.element.className = 'sortable-list';
 
-        element.innerHTML = this.template();
-
-        this.element = element.firstElementChild;
+        this.addItems();
     }
 
-    template () {
-        return `
-        <ul class="sortable-list" data-element="imageListContainer">
-            ${this.createList()}
-        </ul>`
+    addItems() {
+        for (const item of this.items) {
+            item.classList.add('sortable-list__item');
+        }
+
+        this.element.append(...this.items);
     }
 
     createList () {
@@ -111,12 +114,11 @@ export default class SortableList {
     }
 
     remove () {
-        this.removeEventListeners();
         this.element.remove();
     }
-
+    
     destroy () {
         this.remove()
-
+        this.removeEventListeners();
     }
 }
