@@ -206,7 +206,7 @@ export default class ProductForm {
     const items = images.map(({ url, source }) => this.getImageItem(url, source));
 
     const sortableList = new SortableList({ items });
-console.log(sortableList)
+
     imageListContainer.append(sortableList.element);
   }
 
@@ -315,7 +315,7 @@ console.log(sortableList)
           },
           body: formData
         });
-        console.log(imageListContainer)
+        
         imageListContainer.append(this.getImageItem(result.data.link, file.name));
 
         uploadImage.classList.remove('is-loading');

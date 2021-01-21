@@ -310,7 +310,7 @@ export default class ProductForm {
           },
           body: formData
         });
-        console.log(imageListContainer)
+        
         imageListContainer.append(this.getImageItem(result.data.link, file.name));
 
         uploadImage.classList.remove('is-loading');
